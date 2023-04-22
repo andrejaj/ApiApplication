@@ -6,13 +6,17 @@ using MediatR;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
+using System.Runtime.Serialization;
+using System.Text.Json.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace ApiApplication.CQRS.Commands
 {
+    [DataContract]
     public class BuySeatsCommand : IRequest<BuySeatsDto>
     {
+        [DataMember]
         public Guid ReserveId { get; private set; }
 
         public BuySeatsCommand(Guid reserveId)

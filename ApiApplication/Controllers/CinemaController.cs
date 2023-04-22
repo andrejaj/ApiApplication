@@ -11,7 +11,9 @@ using System.Threading.Tasks;
 
 namespace ApiApplication.Controllers
 {
-    public class CinemaController : Controller
+    [ApiController]
+    [Route("[controller]")]
+    public class CinemaController : ControllerBase
     {
         private readonly IMediator _mediator;
         private readonly ILogger<CinemaController> _logger;
@@ -28,8 +30,8 @@ namespace ApiApplication.Controllers
         {
             _logger.LogInformation($"[Sending command]:{nameof(createShowtimeCommand)} -  MovieId: {createShowtimeCommand.MovieId}");
             var response =  await _mediator.Send(createShowtimeCommand);
-            return response;
-            //return response == null ? NotFound() : Ok(response);
+            //return response;
+            return response == null ? NotFound() : Ok(response);
         }
 
         [Route("reserve")]
@@ -37,7 +39,8 @@ namespace ApiApplication.Controllers
         public async Task<ActionResult<ReserveSeatsDto>> ReserveSeatsAsync([FromBody] ReserveSeatsCommand reserveSeatsCommand)
         {
             _logger.LogInformation($"[Sending command]:{nameof(reserveSeatsCommand)} - Showtime Id: {reserveSeatsCommand.ShowtimeId}");
-            return await _mediator.Send(reserveSeatsCommand);
+            var response = await _mediator.Send(reserveSeatsCommand);
+            return response == null ? NotFound() : Ok(response);
         }
 
         [Route("buyseats")]
@@ -45,7 +48,8 @@ namespace ApiApplication.Controllers
         public async Task<ActionResult<BuySeatsDto>> BuySeatsAsync([FromBody] BuySeatsCommand buySeatsCommand)
         {
             _logger.LogInformation($"[Sending command]:{nameof(buySeatsCommand)} - Reservation Id: {buySeatsCommand.ReserveId}");
-            return await _mediator.Send(buySeatsCommand);
+            var response =  await _mediator.Send(buySeatsCommand);
+            return response == null ? NotFound() : Ok(response);
         }
     }
 }

@@ -1,24 +1,26 @@
-﻿using MediatR;
-using System.Runtime.Serialization;
-using System;
+﻿using ApiApplication.API;
 using ApiApplication.Database.Entities;
 using ApiApplication.Database.Repositories.Abstractions;
-using Microsoft.Extensions.Logging;
-using ProtoDefinitions;
-using System.Linq.Expressions;
-using System.Threading.Tasks;
-using System.Threading;
-using Microsoft.EntityFrameworkCore.Internal;
-using System.Linq;
 using ApiApplication.Exceptions;
-using ApiApplication.API;
+using ApiApplication.Helper;
+using MediatR;
+using Microsoft.EntityFrameworkCore.Internal;
+using Microsoft.Extensions.Logging;
+using System;
+using System.Linq;
+using System.Linq.Expressions;
+using System.Runtime.Serialization;
+using System.Text.Json.Serialization;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace ApiApplication.CQRS.Commands
 {
+    [DataContract]
     public class CreateShowtimeCommand : IRequest<ShowtimeDto>
     {
         [DataMember]
-        public string MovieId { get; private set; }
+        public int MovieId { get; private set; }
 
         [DataMember]
         public DateTime SessionDate { get; private set; }
@@ -26,10 +28,10 @@ namespace ApiApplication.CQRS.Commands
         [DataMember]
         public int AuditoriumId { get; private set; }
 
-        public CreateShowtimeCommand(string movieId, DateTime screeningDate, int auditoriumId)
+        public CreateShowtimeCommand(int movieId, DateTime sessionDate, int auditoriumId)
         {
             MovieId = movieId;
-            SessionDate = screeningDate;
+            SessionDate = sessionDate;
             AuditoriumId = auditoriumId;
         }
     }
@@ -49,16 +51,16 @@ namespace ApiApplication.CQRS.Commands
 
         public async Task<ShowtimeDto> Handle(CreateShowtimeCommand message, CancellationToken cancellationToken)
         {
-            // Validate if showtime already exists
-            //TODO: We should validate if the showtime exists in the database for the given movie, auditorium and session date
+            _logger.LogInformation($"Creating Showtime for Movie {message.MovieId}");
 
-            var showTimeExists = await _showtimesRepository.GetAllAsync(FilterByMovieVenue(int.Parse(message.MovieId), message.AuditoriumId, message.SessionDate), cancellationToken);
-            if (!showTimeExists.Any())
+            // showtime exists we shouldn't add second time
+            var showTimeExists = await _showtimesRepository.GetAllAsync(FilterByMovieVenue(message.MovieId, message.AuditoriumId, message.SessionDate), cancellationToken);
+            if (showTimeExists.Any())
             {
-                new CinemaException($"Showtime not found for MovieId {message.MovieId} with AuditoriumId {message.AuditoriumId} and SessionDate {message.SessionDate}");
+                throw new CinemaException($"Showtime found for MovieId {message.MovieId}, AuditoriumId {message.AuditoriumId} and SessionDate {message.SessionDate}.");
             }
 
-            var movieDetails = await _apiclient.GetByIdAsync(message.MovieId);
+            var movieDetails = await _apiclient.GetMovieAsync(message.MovieId.ToString());
 
             var showtime = new ShowtimeEntity
             {
@@ -68,14 +70,14 @@ namespace ApiApplication.CQRS.Commands
                 {
                     Title = movieDetails.Title,
                     ImdbId = movieDetails.Id,
-                    ReleaseDate = new DateTime(int.Parse(movieDetails.Year), 1, 1),
+                    ReleaseDate = new DateTime(int.Parse(movieDetails.Year), RandomValue.GetRandom(12), RandomValue.GetRandom(28)),
                     Stars = movieDetails.Crew,
                 },
             };
 
-            _logger.LogInformation($"Creating Showtime for Movie: {movieDetails.Title}");
-
             showtime = await _showtimesRepository.CreateShowtime(showtime, cancellationToken);
+
+            _logger.LogInformation($"Showtime {showtime.Id} created for Movie {movieDetails.Id}");
 
             return ShowtimeDto.Convert(showtime);
         }
@@ -86,7 +88,7 @@ namespace ApiApplication.CQRS.Commands
         }
     }
 
-    public class ShowtimeDto
+    public record ShowtimeDto
     {
         public int Id { get; set; }
         public int MovieId { get; set; }

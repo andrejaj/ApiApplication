@@ -13,10 +13,13 @@ using System.Threading.Tasks;
 
 namespace ApiApplication.CQRS.Commands
 {
+    [DataContract]
     public class ReserveSeatsCommand : IRequest<ReserveSeatsDto>
     {
+        [DataMember]
         public int ShowtimeId { get; private set; }
 
+        [DataMember]
         public IEnumerable<SeatEntity> Seats { get; private set; }
 
         public ReserveSeatsCommand(int showtimeId, IEnumerable<SeatEntity> seats)
