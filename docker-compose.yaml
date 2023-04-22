@@ -1,6 +1,7 @@
 services:
   api:
     image: lodgify/movies-api:3
+    container_name: movies-api
     ports:
       - "7172:80"
       - "7443:443"
@@ -11,6 +12,7 @@ services:
       - ASPNETCORE_Kestrel__Certificates__Default__Path=/app/aspnetapp.pfx
   cache:
     image: "redis"
+    container_name: cache
     restart: unless-stopped
     ports:
       - "6379:6379"

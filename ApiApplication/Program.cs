@@ -1,30 +1,74 @@
+using ApiApplication.API;
+using ApiApplication.Database;
+using ApiApplication.Database.Repositories;
+using ApiApplication.Database.Repositories.Abstractions;
+using ApiApplication.Exceptions;
+using ApiApplication.PiplineBehvaiours;
+using FluentValidation;
+using MediatR;
+using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+using System.Reflection;
 
-namespace ApiApplication
+var builder = WebApplication.CreateBuilder(args);
+builder.Services.AddTransient<IShowtimesRepository, ShowtimesRepository>();
+builder.Services.AddTransient<ITicketsRepository, TicketsRepository>();
+builder.Services.AddTransient<IAuditoriumsRepository, AuditoriumsRepository>();
+
+builder.Services.AddDbContext<CinemaContext>(options =>
 {
-    public class Program
-    {
-        public static void Main(string[] args)
-        {
-            CreateHostBuilder(args).Build().Run();
-        }
+    options.UseInMemoryDatabase("CinemaDb")
+        .EnableSensitiveDataLogging()
+        .ConfigureWarnings(b => b.Ignore(InMemoryEventId.TransactionIgnoredWarning));
+});
 
-        public static IHostBuilder CreateHostBuilder(string[] args) =>
-            Host.CreateDefaultBuilder(args)
-                .ConfigureWebHostDefaults(webBuilder =>
-                {
-                    webBuilder.ConfigureLogging(options =>
-                    {
-                        options.AddConsole();
-                    });
-                    webBuilder.UseStartup<Startup>();                    
-                });
-    }
+builder.Services.AddSingleton<IApiClientGrpc, ApiClientGrpc>();
+
+builder.Services.AddControllers();
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
+builder.Services.AddHttpClient();
+
+builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(Assembly.GetExecutingAssembly()));
+
+builder.Services.AddValidatorsFromAssembly(Assembly.GetExecutingAssembly());
+
+builder.Services.AddTransient(typeof(IPipelineBehavior<,>), typeof(LoggingBehaviour<,>));
+builder.Services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ValidationBehaviour<,>));
+
+builder.Services.AddStackExchangeRedisCache(options =>
+{
+    options.Configuration = builder.Configuration.GetConnectionString("Redis");
+});
+
+var app = builder.Build();
+
+// Configure the HTTP request pipeline.
+if (app.Environment.IsDevelopment())
+{
+    app.UseDeveloperExceptionPage();
+    app.UseSwagger();
+    app.UseSwaggerUI();
+    //app.UseSwaggerUI(options =>
+    //{
+    //    options.SwaggerEndpoint("v1/swagger.json", "CinemaAPI v1");
+    //});
 }
+
+app.UseHttpsRedirection();
+app.UseRouting();
+app.UseAuthentication();
+app.UseAuthorization();
+
+app.UseMiddleware<ErrorHandlerMiddleware>();
+
+app.MapControllers();
+
+SampleData.Initialize(app);
+
+app.Run();
