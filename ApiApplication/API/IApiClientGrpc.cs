@@ -5,7 +5,7 @@ namespace ApiApplication.API
 {
     public interface IApiClientGrpc
     {
-        Task<showListResponse> GetAllAsync();
-        Task<showResponse> GetByIdAsync(string id);
+        Task<showListResponse> GetAllMoviesAsync();
+        Task<showResponse> GetMovieAsync(string id);
     }
 }

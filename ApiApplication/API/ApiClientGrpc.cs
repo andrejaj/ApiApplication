@@ -36,19 +36,14 @@ namespace ApiApplication.API
             client = new MoviesApi.MoviesApiClient(channel);
         }
 
-        public async Task<showListResponse> GetAllAsync()
+        public async Task<showListResponse> GetAllMoviesAsync()
         {
             var all = await client.GetAllAsync(new Empty());
             all.Data.TryUnpack<showListResponse>(out var data);
             return data;
         }
 
-        public Task<showResponse> GetByIdAsync(string id)
-        {
-            throw new NotImplementedException();
-        }
-
-        public async Task<showResponse> GetShowtimeAsync(string id)
+        public async Task<showResponse> GetMovieAsync(string id)
         {
             var response = await client.GetByIdAsync(new IdRequest { Id = id });
             if (response.Success)
@@ -72,6 +67,23 @@ namespace ApiApplication.API
                     _logger.LogError("Movie {@Id} Not found", id);
                     throw new Exception($"MovieId {id} Not found");
                 }
+            }
+        }
+
+        public async Task<showResponse> SearchMovieAsync(SearchRequest request)
+        {
+
+            var response = await client.SearchAsync(request);
+            if (response.Success)
+            {
+                _logger.LogInformation($"[GRPC] Movie for search texts: {request.Text}");
+                response.Data.TryUnpack<showResponse>(out var data);
+                return data;
+            }
+            else
+            {
+                //check cache
+                throw new Exception("[GRPC] No movie found!");
             }
         }
 
