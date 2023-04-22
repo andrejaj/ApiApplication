@@ -2,7 +2,7 @@
 
 namespace ApiApplication.Exceptions
 {
-    public class CinemaException : Exception
+    public sealed class CinemaException : Exception
     {
         public string[] Errors { get; set; } = Array.Empty<string>();
 
