@@ -31,7 +31,7 @@ namespace ApiApplication.PiplineBehvaiours
                 try
                 {
                     var requestData = JsonSerializer.Serialize(request);
-                    _logger.LogInformation($"[DATA] With data: {requestData}");
+                    _logger.LogInformation($"[DATA]: {requestData}");
                 }
                 catch (Exception)
                 {
@@ -43,7 +43,7 @@ namespace ApiApplication.PiplineBehvaiours
             {
                 stopwatch.Stop();
                 _logger.LogInformation(
-                    $"[END] Handled {typeof(TResponse).Name}; Execution time = {stopwatch.ElapsedMilliseconds}ms");
+                    $"[STOP] Handling {typeof(TResponse).Name}; Execution time = {stopwatch.ElapsedMilliseconds}ms");
             }
 
             return response;
