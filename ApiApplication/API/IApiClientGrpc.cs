@@ -7,5 +7,6 @@ namespace ApiApplication.API
     {
         Task<showListResponse> GetAllMoviesAsync();
         Task<showResponse> GetMovieAsync(string id);
+        Task<showResponse> SearchMovieAsync(SearchRequest request);
     }
 }

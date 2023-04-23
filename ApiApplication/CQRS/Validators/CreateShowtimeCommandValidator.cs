@@ -1,6 +1,5 @@
 ﻿using ApiApplication.CQRS.Commands;
 using FluentValidation;
-using Microsoft.Extensions.Logging;
 using System;
 
 namespace ApiApplication.CQRS.Validators
@@ -11,7 +10,7 @@ namespace ApiApplication.CQRS.Validators
         {
             RuleFor(command => command.MovieId).NotEmpty();
             RuleFor(command => command.AuditoriumId).NotEmpty();
-            RuleFor(command => command.SessionDate).NotEmpty().Must(HaveValidDate).WithMessage("Please specify a valid date!");
+            RuleFor(command => command.SessionDate).NotEmpty().Must(HaveValidDate).WithMessage("Valid date required!");
         }
 
         private bool HaveValidDate(DateTime dateTime) => dateTime >= DateTime.UtcNow;

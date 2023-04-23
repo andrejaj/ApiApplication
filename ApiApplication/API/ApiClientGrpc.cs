@@ -1,13 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Net.Http;
-using System.Threading.Tasks;
-using Grpc.Core;
+﻿using Grpc.Core;
 using Grpc.Net.Client;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using ProtoDefinitions;
+using System;
+using System.Net.Http;
+using System.Threading.Tasks;
 
 namespace ApiApplication.API
 {
@@ -24,10 +23,10 @@ namespace ApiApplication.API
             _cache = cache ?? throw new ArgumentNullException(nameof(cache));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             APIKEY = configuration["CinemaApi:ApiKey"];
-            if (string.IsNullOrEmpty(APIKEY)) throw new ArgumentNullException(nameof(APIKEY), "CinemaApi key not found");
+            if (string.IsNullOrEmpty(APIKEY)) throw new ArgumentNullException(nameof(APIKEY), "APIKEY not found!");
 
             var address = configuration["CinemaApi:BaseUrl"];
-            if (string.IsNullOrEmpty(address)) throw new ArgumentNullException(nameof(address), "CinemaApi url address not found");
+            if (string.IsNullOrEmpty(address)) throw new ArgumentNullException(nameof(address), "APIKEY url address not found!");
 
             // Create a channel to the gRPC server
             channel = CreateAuthenticatedChannel(address);
@@ -48,25 +47,21 @@ namespace ApiApplication.API
             var response = await client.GetByIdAsync(new IdRequest { Id = id });
             if (response.Success)
             {
-                _logger.LogInformation("Fetching movie from GRPC service - Movie: {@Id}", id);
+                _logger.LogInformation($"Getting movie {id} from GRPC service!");
                 response.Data.TryUnpack<showResponse>(out var data);
                 await _cache.SetRecordAsync(id, data, absoluteExpireTime: TimeSpan.FromMinutes(5), slidingExpireTime: TimeSpan.FromMinutes(10));
                 return data;
             }
             else
             {
-                _logger.LogInformation("GRPC service failed, trying from cache..");
+                _logger.LogInformation("Failed to retrive a movie from GRPC service, querying cache!");
                 var cached = await _cache.GetRecordAsync<showResponse>(id);
-                if (cached != null)
+                if (cached == null)
                 {
-                    _logger.LogInformation("Movie found in cache}");
-                    return cached;
+                    _logger.LogError($"Movie {id} not found!");
+                    //throw new CinemaException($"MovieId {id} not found!");
                 }
-                else
-                {
-                    _logger.LogError("Movie {@Id} Not found", id);
-                    throw new Exception($"MovieId {id} Not found");
-                }
+                return cached;
             }
         }
 

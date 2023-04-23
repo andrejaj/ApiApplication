@@ -54,10 +54,6 @@ if (app.Environment.IsDevelopment())
     app.UseDeveloperExceptionPage();
     app.UseSwagger();
     app.UseSwaggerUI();
-    //app.UseSwaggerUI(options =>
-    //{
-    //    options.SwaggerEndpoint("v1/swagger.json", "CinemaAPI v1");
-    //});
 }
 
 app.UseHttpsRedirection();

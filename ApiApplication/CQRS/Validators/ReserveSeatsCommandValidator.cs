@@ -1,5 +1,4 @@
 ﻿using ApiApplication.CQRS.Commands;
-using ApiApplication.Database.Entities;
 using FluentValidation;
 using Microsoft.EntityFrameworkCore.Internal;
 using System.Collections.Generic;
@@ -16,6 +15,6 @@ namespace ApiApplication.CQRS.Validators
             RuleFor(command => command.Seats).Must(HaveSeats).WithMessage("No seats");
         }
 
-        private bool HaveSeats(IEnumerable<SeatEntity> seats) => seats.Any();
+        private bool HaveSeats(IEnumerable<SeatDto> seats) => seats.Any();
     }
 }

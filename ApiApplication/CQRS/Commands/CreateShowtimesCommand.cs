@@ -10,7 +10,6 @@ using System;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Runtime.Serialization;
-using System.Text.Json.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -79,7 +78,7 @@ namespace ApiApplication.CQRS.Commands
 
             _logger.LogInformation($"Showtime {showtime.Id} created for Movie {movieDetails.Id}");
 
-            return ShowtimeDto.Convert(showtime);
+            return ShowtimeDto.ConvertFrom(showtime);
         }
 
         Expression<Func<ShowtimeEntity, bool>> FilterByMovieVenue(int MovieId, int AuditoriumId, DateTime sessionDate)
@@ -96,7 +95,7 @@ namespace ApiApplication.CQRS.Commands
         public DateTime SessionDate { get; set; }
         public int AuditoriumId { get; set; }
 
-        public static ShowtimeDto Convert(ShowtimeEntity showtime)
+        public static ShowtimeDto ConvertFrom(ShowtimeEntity showtime)
         {
             return new ShowtimeDto()
             {

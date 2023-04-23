@@ -1,13 +1,12 @@
-﻿using ApiApplication.Database.Entities;
-using ApiApplication.Database.Repositories.Abstractions;
+﻿using ApiApplication.Database.Repositories.Abstractions;
 using ApiApplication.Exceptions;
 using ApiApplication.Extensions;
 using MediatR;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Runtime.Serialization;
-using System.Text.Json.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -40,7 +39,7 @@ namespace ApiApplication.CQRS.Commands
 
         public async Task<BuySeatsDto> Handle(BuySeatsCommand command, CancellationToken cancellationToken)
         {
-            var reservedTicket = await _ticketsRepository.GetAsync(command.ReserveId, cancellationToken) ?? throw new Exception($"Reservation id {command.ReserveId} does not exist!");
+            var reservedTicket = await _ticketsRepository.GetAsync(command.ReserveId, cancellationToken) ?? throw new CinemaException($"Reservation id {command.ReserveId} does not exist!");
 
             if (reservedTicket.Paid)
             {
@@ -61,7 +60,7 @@ namespace ApiApplication.CQRS.Commands
             return new BuySeatsDto
             {
                 TicketId = confirmedTicket.Id,
-                Seats = confirmedTicket.Seats,
+                Seats = confirmedTicket.Seats.Select(x => new SeatDto(x.Row, x.SeatNumber)),
                 Movie = showTime.Movie.Title,
                 SessionDate = showTime.SessionDate,
                 AuditoriumId = showTime.AuditoriumId,
@@ -72,7 +71,7 @@ namespace ApiApplication.CQRS.Commands
     public class BuySeatsDto
     {
         public Guid TicketId { get; set; }
-        public IEnumerable<SeatEntity> Seats { get; set; }
+        public IEnumerable<SeatDto> Seats { get; set; }
         public string Movie { get; set; }
         public DateTime SessionDate { get; set; }
         public int AuditoriumId { get; set; }
