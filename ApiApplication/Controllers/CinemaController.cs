@@ -30,8 +30,7 @@ namespace ApiApplication.Controllers
         {
             _logger.LogInformation($"[Sending command]:{nameof(createShowtimeCommand)} -  MovieId: {createShowtimeCommand.MovieId}");
             var response =  await _mediator.Send(createShowtimeCommand);
-            //return response;
-            return response == null ? NotFound() : Ok(response);
+            return response == null ? NotFound("No response creating showtime") : Ok(response);
         }
 
         [Route("reserve")]
@@ -40,7 +39,7 @@ namespace ApiApplication.Controllers
         {
             _logger.LogInformation($"[Sending command]:{nameof(reserveSeatsCommand)} - Showtime Id: {reserveSeatsCommand.ShowtimeId}");
             var response = await _mediator.Send(reserveSeatsCommand);
-            return response == null ? NotFound() : Ok(response);
+            return response == null ? NotFound("No response reserving seats!") : Ok(response);
         }
 
         [Route("buyseats")]
@@ -49,7 +48,7 @@ namespace ApiApplication.Controllers
         {
             _logger.LogInformation($"[Sending command]:{nameof(buySeatsCommand)} - Reservation Id: {buySeatsCommand.ReserveId}");
             var response =  await _mediator.Send(buySeatsCommand);
-            return response == null ? NotFound() : Ok(response);
+            return response == null ? NotFound("No response for buying seats!") : Ok(response);
         }
     }
 }

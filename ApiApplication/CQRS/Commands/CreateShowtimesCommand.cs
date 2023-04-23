@@ -19,7 +19,7 @@ namespace ApiApplication.CQRS.Commands
     public class CreateShowtimeCommand : IRequest<ShowtimeDto>
     {
         [DataMember]
-        public int MovieId { get; private set; }
+        public string MovieId { get; private set; }
 
         [DataMember]
         public DateTime SessionDate { get; private set; }
@@ -27,7 +27,7 @@ namespace ApiApplication.CQRS.Commands
         [DataMember]
         public int AuditoriumId { get; private set; }
 
-        public CreateShowtimeCommand(int movieId, DateTime sessionDate, int auditoriumId)
+        public CreateShowtimeCommand(string movieId, DateTime sessionDate, int auditoriumId)
         {
             MovieId = movieId;
             SessionDate = sessionDate;
@@ -48,23 +48,23 @@ namespace ApiApplication.CQRS.Commands
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
-        public async Task<ShowtimeDto> Handle(CreateShowtimeCommand message, CancellationToken cancellationToken)
+        public async Task<ShowtimeDto> Handle(CreateShowtimeCommand command, CancellationToken cancellationToken)
         {
-            _logger.LogInformation($"Creating Showtime for Movie {message.MovieId}");
+            _logger.LogInformation($"Creating Showtime for Movie {command.MovieId}");
 
             // showtime exists we shouldn't add second time
-            var showTimeExists = await _showtimesRepository.GetAllAsync(FilterByMovieVenue(message.MovieId, message.AuditoriumId, message.SessionDate), cancellationToken);
+            var showTimeExists = await _showtimesRepository.GetAllAsync(FilterByMovieVenue(command.MovieId, command.AuditoriumId, command.SessionDate), cancellationToken);
             if (showTimeExists.Any())
             {
-                throw new CinemaException($"Showtime found for MovieId {message.MovieId}, AuditoriumId {message.AuditoriumId} and SessionDate {message.SessionDate}.");
+                throw new CinemaException($"Showtime found for MovieId {command.MovieId}, AuditoriumId {command.AuditoriumId} and SessionDate {command.SessionDate}.");
             }
 
-            var movieDetails = await _apiclient.GetMovieAsync(message.MovieId.ToString());
+            var movieDetails = await _apiclient.GetMovieAsync(command.MovieId.ToString());
 
             var showtime = new ShowtimeEntity
             {
-                SessionDate = message.SessionDate,
-                AuditoriumId = message.AuditoriumId,
+                SessionDate = command.SessionDate,
+                AuditoriumId = command.AuditoriumId,
                 Movie = new MovieEntity
                 {
                     Title = movieDetails.Title,
@@ -81,9 +81,9 @@ namespace ApiApplication.CQRS.Commands
             return ShowtimeDto.ConvertFrom(showtime);
         }
 
-        Expression<Func<ShowtimeEntity, bool>> FilterByMovieVenue(int MovieId, int AuditoriumId, DateTime sessionDate)
+        Expression<Func<ShowtimeEntity, bool>> FilterByMovieVenue(string MovieId, int AuditoriumId, DateTime sessionDate)
         {
-            return x => x.Movie.Id == MovieId && x.AuditoriumId == AuditoriumId && x.SessionDate.Equals(sessionDate);
+            return x => x.Movie.Id.ToString().Contains(MovieId) && x.AuditoriumId == AuditoriumId && x.SessionDate.Equals(sessionDate);
         }
     }
 
