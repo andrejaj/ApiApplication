@@ -1,2 +1,95 @@
-Please add the cURLs of your tests here:
+--Creating a new showtime for movie with ID-test1 in auditorium 1 at 2023-07-26T00:00:00
+
+curl --location 'https://localhost:7629/Showtime/create' \
+--header 'Content-Type: application/json' \
+--data '{
+  "movieId": "ID-test1",
+  "sessionDate": "2023-07-26T00:00:00",
+  "auditoriumId": 1
+}'
+
+--Get the showtime with ID 2
+curl --location --request GET 'https://localhost:7629/Showtime/2' \
+--header 'Content-Type: application/json' \
+--data '{
+  "movieId": "ID-test1",
+  "sessionDate": "2023-04-10T19:30:00",
+  "auditoriumId": 1
+}'
+
+--Reserve a seat
+
+curl --location --request PUT 'https://localhost:7629/Showtime/reserve' \
+--header 'Content-Type: application/json' \
+--data '{
+  "showtimeId": 2,
+  "seats": [
+    {
+      "row": 5,
+      "seatNumber": 1
+    }
+  ]
+}'
+
+--Reserve a seat 
+
+curl --location --request PUT 'https://localhost:7629/Showtime/reserve' \
+--header 'Content-Type: application/json' \
+--data '{
+  "showtimeId": 2,
+  "seats": [
+    {
+      "row": 5,
+      "seatNumber": 24
+    }
+  ]
+}'
+
+--Reserve a seat - Seats are not contiguous
+
+curl --location --request PUT 'https://localhost:7629/Showtime/reserve' \
+--header 'Content-Type: application/json' \
+--data '{
+  "showtimeId": 2,
+  "seats": [
+    {
+      "row": 1,
+      "seatNumber": 2
+    },
+    {
+      "row": 1,
+      "seatNumber": 3
+    },
+    {
+      "row": 1,
+      "seatNumber": 8
+    }
+  ]
+}'
+
+-- Reserve a seat - Seats are contiguous
+
+curl --location --request PUT 'https://localhost:7629/Showtime/reserve' \
+--header 'Content-Type: application/json' \
+--data '{
+  "showtimeId": 2,
+  "seats": [
+    {
+      "row": 1,
+      "seatNumber": 2
+    },
+    {
+      "row": 1,
+      "seatNumber": 3
+    },
+    {
+      "row": 1,
+      "seatNumber": 4
+    }
+  ]
+}'
+
+-- Buy seats with returned reserved id
+
+curl --location 'https://localhost:7629/Showtime/buy/${reserveId}
 

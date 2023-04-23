@@ -60,7 +60,6 @@ namespace ApiApplication.API
                 var cached = await _cache.GetRecordAsync<showResponse>(id);
                 if (cached == null)
                 {
-                    _logger.LogError($"Movie {id} not found in cache!");
                     throw new CinemaException($"MovieId {id} not found in cache!");
                 }
                 return cached;

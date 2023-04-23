@@ -37,7 +37,6 @@ namespace ApiApplication.CQRS.Commands
             SeatNumber = seatNumber;
         }
 
-        //public short AuditoriumId { get; set; }
         public short Row { get; set; }
         public short SeatNumber { get; set; }
     }
@@ -65,7 +64,7 @@ namespace ApiApplication.CQRS.Commands
             {
                 throw new CinemaException($"Showtime {command.ShowtimeId} does not exist!");
             }
-            
+
             var auditorium = await _auditoriumsRepository.GetAsync(showtimeTickets.AuditoriumId, cancellationToken);
 
             _logger.LogInformation($"Checking criteria for seat reservation for showtime: {showtimeTickets.Id}");
@@ -95,7 +94,7 @@ namespace ApiApplication.CQRS.Commands
             {
                 ReserveId = ticket.Id,
                 Movie = showtime.Movie.Title,
-                SeatsCount = command.Seats.Count(),
+                SeatsCount = showtime.Tickets.Select(x => x.Seats).Count(),
                 AuditoriumId = ticket.Showtime.AuditoriumId,
                 SessionTime = ticket.Showtime.SessionDate,
             };
@@ -104,20 +103,16 @@ namespace ApiApplication.CQRS.Commands
         private bool AreContiguousSeats(IEnumerable<SeatDto> seats)
         {
             _logger.LogInformation("Checking if all requested seats are contiguous");
-            var seatPerRow = seats.GroupBy(x => x.Row).Select(g => new { Row = g.Key, Seats = g.ToList()}).OrderBy(x => x.Seats);
 
-            if(seatPerRow.Count() > 1)
+            var result = seats.OrderBy(x => x.Row).ThenBy(x => x.SeatNumber).GroupWhile<SeatDto>((n1, n2) => n2.SeatNumber - n1.SeatNumber == 1);
+                     
+            if(result.Count() > 1)
             {
-                _logger.LogInformation($"More then one row for seat!");
+                _logger.LogInformation($"Seats are not contigious!");
                 return false;
             }
 
-            var consecutiveSeats = seatPerRow.FirstOrDefault()
-                .Seats
-                .GroupWhile<SeatDto>((n1, n2) => n1.SeatNumber == n2.SeatNumber)
-                .Select(g => new { Count = g.Count() });
-
-            return consecutiveSeats.FirstOrDefault().Count == seats.Count();
+            return true;
         }
 
         private bool AuditoriumHasSeats(AuditoriumEntity auditorium, IEnumerable<SeatDto> seats)

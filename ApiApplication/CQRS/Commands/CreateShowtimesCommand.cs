@@ -83,7 +83,7 @@ namespace ApiApplication.CQRS.Commands
 
         Expression<Func<ShowtimeEntity, bool>> FilterByMovieVenue(string MovieId, int AuditoriumId, DateTime sessionDate)
         {
-            return x => x.Movie.Id.ToString().Contains(MovieId) && x.AuditoriumId == AuditoriumId && x.SessionDate.Equals(sessionDate);
+            return x => x.Movie.ImdbId.ToString().Equals(MovieId) && x.AuditoriumId == AuditoriumId && x.SessionDate.Equals(sessionDate);
         }
     }
 
