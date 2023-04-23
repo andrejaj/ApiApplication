@@ -1,4 +1,5 @@
-﻿using Grpc.Core;
+﻿using ApiApplication.Exceptions;
+using Grpc.Core;
 using Grpc.Net.Client;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Configuration;
@@ -49,6 +50,7 @@ namespace ApiApplication.API
             {
                 _logger.LogInformation($"Getting movie {id} from GRPC service!");
                 response.Data.TryUnpack<showResponse>(out var data);
+                _logger.LogInformation($"Saving movie {id} to cache!");
                 await _cache.SetRecordAsync(id, data, absoluteExpireTime: TimeSpan.FromMinutes(5), slidingExpireTime: TimeSpan.FromMinutes(10));
                 return data;
             }
@@ -58,8 +60,8 @@ namespace ApiApplication.API
                 var cached = await _cache.GetRecordAsync<showResponse>(id);
                 if (cached == null)
                 {
-                    _logger.LogError($"Movie {id} not found!");
-                    //throw new CinemaException($"MovieId {id} not found!");
+                    _logger.LogError($"Movie {id} not found in cache!");
+                    throw new CinemaException($"MovieId {id} not found in cache!");
                 }
                 return cached;
             }
