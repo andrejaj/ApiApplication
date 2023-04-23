@@ -39,41 +39,45 @@ namespace ApiApplication.CQRS.Commands
 
         public async Task<BuySeatsDto> Handle(BuySeatsCommand command, CancellationToken cancellationToken)
         {
-            var reservedTicket = await _ticketsRepository.GetAsync(command.ReserveId, cancellationToken) ?? throw new CinemaException($"Reservation id {command.ReserveId} does not exist!");
+            var reservedTicket = await _ticketsRepository.GetAsync(command.ReserveId, cancellationToken) ?? throw new CinemaException($"Invalid Reservation id {command.ReserveId}!");
 
             if (reservedTicket.Paid)
             {
-                throw new CinemaException($"Reservation with id {command.ReserveId} was already bought.");
+                throw new CinemaException($"Reservation {command.ReserveId} was already bought.");
             }
-
-            var showTime = await _showtimesRepository.GetWithMoviesByIdAsync(reservedTicket.ShowtimeId, cancellationToken);
 
             if (reservedTicket.CreatedTime.HasExpired())
             {
-                throw new CinemaException($"Reservation with id {command.ReserveId} expired.");
+                throw new CinemaException($"Reservation {command.ReserveId} has expired.");
             }
 
+            var showTime = await _showtimesRepository.GetWithMoviesByIdAsync(reservedTicket.ShowtimeId, cancellationToken);
             var confirmedTicket = await _ticketsRepository.ConfirmPaymentAsync(reservedTicket, cancellationToken);
 
-            _logger.LogInformation($"Buying Ticket for {showTime.Movie.Title} with reservation {reservedTicket.Id}.");
+            _logger.LogInformation($"Buying Ticket for Movie {showTime.Movie.Title} with reservation {reservedTicket.Id}.");
+
+            var seats = confirmedTicket.Seats?.Select(s => new SeatDto(s.Row, s.SeatNumber)).ToList();
 
             return new BuySeatsDto
             {
                 TicketId = confirmedTicket.Id,
-                Seats = confirmedTicket.Seats.Select(x => new SeatDto(x.Row, x.SeatNumber)),
+                Seats = seats,
                 Movie = showTime.Movie.Title,
                 SessionDate = showTime.SessionDate,
                 AuditoriumId = showTime.AuditoriumId,
+                Status = "Payment Processed"
             };
         }
     }
 
+
     public class BuySeatsDto
     {
         public Guid TicketId { get; set; }
-        public IEnumerable<SeatDto> Seats { get; set; }
+        public IList<SeatDto> Seats { get; set; }
         public string Movie { get; set; }
         public DateTime SessionDate { get; set; }
         public int AuditoriumId { get; set; }
+        public string Status { get; set; }
     }
 }
