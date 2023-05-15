@@ -51,9 +51,9 @@ namespace ApiApplication.CQRS.Commands
                 throw new CinemaException($"Reservation {command.ReserveId} has expired.");
             }
 
-            var showTime = await _showtimesRepository.GetWithMoviesByIdAsync(reservedTicket.ShowtimeId, cancellationToken);
             var confirmedTicket = await _ticketsRepository.ConfirmPaymentAsync(reservedTicket, cancellationToken);
 
+            var showTime = await _showtimesRepository.GetWithMoviesByIdAsync(reservedTicket.ShowtimeId, cancellationToken);
             _logger.LogInformation($"Buying Ticket for Movie {showTime.Movie.Title} with reservation {reservedTicket.Id}.");
 
             var seats = confirmedTicket.Seats?.Select(s => new SeatDto(s.Row, s.SeatNumber)).ToList();
