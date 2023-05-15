@@ -9,7 +9,7 @@ WORKDIR /src
 COPY ["ApiApplication.csproj", "."]
 RUN dotnet restore "./ApiApplication.csproj"
 COPY . .
-WORKDIR "/src/."
+WORKDIR "/src/"
 RUN dotnet build "ApiApplication.csproj" -c Release -o /app/build
 
 FROM build AS publish
