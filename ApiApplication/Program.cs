@@ -3,6 +3,8 @@ using ApiApplication.Database;
 using ApiApplication.Database.Repositories;
 using ApiApplication.Database.Repositories.Abstractions;
 using ApiApplication.Exceptions;
+using ApiApplication.Extensions;
+using ApiApplication.Helper;
 using ApiApplication.PiplineBehvaiours;
 using FluentValidation;
 using MediatR;
@@ -27,8 +29,7 @@ builder.Services.AddDbContext<CinemaContext>(options =>
         .ConfigureWarnings(b => b.Ignore(InMemoryEventId.TransactionIgnoredWarning));
 });
 
-builder.Services.AddSingleton<IApiClient, ApiClientGrpc>();
-//builder.Services.AddSingleton<IApiClient, ApiClientHttp>();
+builder.Services.RegisterProtocolDependencies();
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();

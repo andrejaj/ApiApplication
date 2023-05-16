@@ -29,7 +29,7 @@ namespace ApiApplication.API
             APIKEY = configuration["CinemaApi:ApiKey"];
             if (string.IsNullOrEmpty(APIKEY)) throw new ArgumentNullException(nameof(APIKEY), "APIKEY not found!");
 
-            var address = configuration["CinemaApi:BaseUrl"];
+            var address = configuration["CinemaApi:BaseUrlHttps"];
             if (string.IsNullOrEmpty(address)) throw new ArgumentNullException(nameof(address), "APIKEY url address not found!");
 
             // Create a channel to the gRPC server

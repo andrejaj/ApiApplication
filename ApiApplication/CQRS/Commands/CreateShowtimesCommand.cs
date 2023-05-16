@@ -2,9 +2,11 @@
 using ApiApplication.Database.Entities;
 using ApiApplication.Database.Repositories.Abstractions;
 using ApiApplication.Exceptions;
+using ApiApplication.Extensions;
 using ApiApplication.Helper;
 using MediatR;
 using Microsoft.EntityFrameworkCore.Internal;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Linq;
@@ -41,11 +43,11 @@ namespace ApiApplication.CQRS.Commands
         private readonly IShowtimesRepository _showtimesRepository;
         private readonly ILogger<CreateShowtimeHandler> _logger;
 
-        public CreateShowtimeHandler(IApiClient apiClient, IShowtimesRepository showtimesRepository, ILogger<CreateShowtimeHandler> logger)
+        public CreateShowtimeHandler(IShowtimesRepository showtimesRepository, ILogger<CreateShowtimeHandler> logger, IConfiguration configuration, ReminderServiceResolver resolver)
         {
-            _apiclient = apiClient ?? throw new ArgumentNullException(nameof(apiClient));
             _showtimesRepository = showtimesRepository ?? throw new ArgumentNullException(nameof(showtimesRepository));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            _apiclient = resolver(configuration["CinemaApi:Protocol"]);
         }
 
         public async Task<ShowtimeDto> Handle(CreateShowtimeCommand command, CancellationToken cancellationToken)
