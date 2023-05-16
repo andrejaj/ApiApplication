@@ -1,4 +1,7 @@
-﻿using ApiApplication.Exceptions;
+﻿using ApiApplication.API.DTO;
+using ApiApplication.Exceptions;
+using ApiApplication.Helper;
+using Google.Protobuf;
 using Grpc.Core;
 using Grpc.Net.Client;
 using Microsoft.Extensions.Caching.Distributed;
@@ -11,7 +14,7 @@ using System.Threading.Tasks;
 
 namespace ApiApplication.API
 {
-    internal class ApiClientGrpc : IApiClientGrpc
+    internal class ApiClientGrpc : IApiClient
     {
         private readonly MoviesApi.MoviesApiClient client;
         private readonly GrpcChannel channel;
@@ -36,28 +39,29 @@ namespace ApiApplication.API
             client = new MoviesApi.MoviesApiClient(channel);
         }
 
-        public async Task<showListResponse> GetAllMoviesAsync()
-        {
-            var all = await client.GetAllAsync(new Empty());
-            all.Data.TryUnpack<showListResponse>(out var data);
-            return data;
-        }
+        //public async Task<showListResponse> GetAllMoviesAsync()
+        //{
+        //    var all = await client.GetAllAsync(new Empty());
+        //    all.Data.TryUnpack<showListResponse>(out var data);
+        //    return data;
+        //}
 
-        public async Task<showResponse> GetMovieAsync(string id)
+        public async Task<Show> GetMovieAsync(string id)
         {
+            _logger.LogInformation($"Getting movie {id} from GRPC service!");
             var response = await client.GetByIdAsync(new IdRequest { Id = id });
             if (response.Success)
             {
-                _logger.LogInformation($"Getting movie {id} from GRPC service!");
                 response.Data.TryUnpack<showResponse>(out var data);
                 _logger.LogInformation($"Saving movie {id} to cache!");
-                await _cache.SetRecordAsync(id, data, absoluteExpireTime: TimeSpan.FromMinutes(5), slidingExpireTime: TimeSpan.FromMinutes(10));
-                return data;
+                var show = ProtobufHelper.ProtoDeserialize<Show>(data.ToByteArray());
+                await _cache.SetRecordAsync(id, show, absoluteExpireTime: TimeSpan.FromMinutes(5), slidingExpireTime: TimeSpan.FromMinutes(10));
+                return show;
             }
             else
             {
                 _logger.LogInformation("Failed to retrive a movie from GRPC service, querying cache!");
-                var cached = await _cache.GetRecordAsync<showResponse>(id);
+                var cached = await _cache.GetRecordAsync<Show>(id);
                 if (cached == null)
                 {
                     throw new CinemaException($"MovieId {id} not found in cache!");
@@ -66,22 +70,22 @@ namespace ApiApplication.API
             }
         }
 
-        public async Task<showResponse> SearchMovieAsync(SearchRequest request)
-        {
+        //public async Task<showResponse> SearchMovieAsync(SearchRequest request)
+        //{
 
-            var response = await client.SearchAsync(request);
-            if (response.Success)
-            {
-                _logger.LogInformation($"[GRPC] Movie for search texts: {request.Text}");
-                response.Data.TryUnpack<showResponse>(out var data);
-                return data;
-            }
-            else
-            {
-                //check cache
-                throw new Exception("[GRPC] No movie found!");
-            }
-        }
+        //    var response = await client.SearchAsync(request);
+        //    if (response.Success)
+        //    {
+        //        _logger.LogInformation($"[GRPC] Movie for search texts: {request.Text}");
+        //        response.Data.TryUnpack<showResponse>(out var data);
+        //        return data;
+        //    }
+        //    else
+        //    {
+        //        //check cache
+        //        throw new Exception("[GRPC] No movie found!");
+        //    }
+        //}
 
         private GrpcChannel CreateAuthenticatedChannel(string address)
         {

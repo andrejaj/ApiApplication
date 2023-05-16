@@ -37,11 +37,11 @@ namespace ApiApplication.CQRS.Commands
 
     public class CreateShowtimeHandler : IRequestHandler<CreateShowtimeCommand, ShowtimeDto>
     {
-        private readonly IApiClientGrpc _apiclient;
+        private readonly IApiClient _apiclient;
         private readonly IShowtimesRepository _showtimesRepository;
         private readonly ILogger<CreateShowtimeHandler> _logger;
 
-        public CreateShowtimeHandler(IApiClientGrpc apiClient, IShowtimesRepository showtimesRepository, ILogger<CreateShowtimeHandler> logger)
+        public CreateShowtimeHandler(IApiClient apiClient, IShowtimesRepository showtimesRepository, ILogger<CreateShowtimeHandler> logger)
         {
             _apiclient = apiClient ?? throw new ArgumentNullException(nameof(apiClient));
             _showtimesRepository = showtimesRepository ?? throw new ArgumentNullException(nameof(showtimesRepository));

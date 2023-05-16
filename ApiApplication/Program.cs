@@ -27,7 +27,8 @@ builder.Services.AddDbContext<CinemaContext>(options =>
         .ConfigureWarnings(b => b.Ignore(InMemoryEventId.TransactionIgnoredWarning));
 });
 
-builder.Services.AddSingleton<IApiClientGrpc, ApiClientGrpc>();
+builder.Services.AddSingleton<IApiClient, ApiClientGrpc>();
+//builder.Services.AddSingleton<IApiClient, ApiClientHttp>();
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
