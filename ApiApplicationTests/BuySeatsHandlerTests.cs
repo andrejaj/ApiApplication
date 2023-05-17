@@ -21,7 +21,7 @@ namespace ApiApplicationTests
         }
 
         [Test]
-        public async Task BuySeatsTests()
+        public async Task BuySeatsTest()
         {
             // Arrange
             BuySeatsCommand command = new BuySeatsCommand(Guid.NewGuid());
