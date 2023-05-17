@@ -7,7 +7,7 @@ namespace ApiApplication.Extensions
     {
         public static bool HasExpired(this DateTime time, int minutes = 10)
         {
-            return DateTime.UtcNow - time > TimeSpan.FromMinutes(minutes);
+            return DateTime.Now - time > TimeSpan.FromMinutes(minutes);
         }
     }
 }

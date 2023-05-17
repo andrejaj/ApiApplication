@@ -69,17 +69,17 @@ namespace ApiApplication.CQRS.Commands
 
             _logger.LogInformation($"Checking criteria for seat reservation for showtime: {showtimeTickets.Id}");
 
-            if (!AuditoriumHasSeats(auditorium, command.Seats))
+            if (!command.Seats.AreInAuditorium(auditorium))
             {
                 throw new CinemaException("Seats do not exist in the auditorium!");
             }
 
-            if (!AreAvailableSeats(showtimeTickets, command.Seats))
+            if (!command.Seats.AreAvailable(showtimeTickets))
             {
                 throw new CinemaException("Seats are not available in auditorium!");
             }
 
-            if (!AreContiguousSeats(command.Seats))
+            if (!command.Seats.AreContiguous())
             {
                 throw new CinemaException("Seats are not contiguous in a row!");
             }
@@ -98,35 +98,6 @@ namespace ApiApplication.CQRS.Commands
                 AuditoriumId = ticket.Showtime.AuditoriumId,
                 SessionTime = ticket.Showtime.SessionDate,
             };
-        }
-
-        private bool AreContiguousSeats(IEnumerable<SeatDto> seats)
-        {
-            _logger.LogInformation("Checking if all requested seats are contiguous");
-
-            var result = seats.OrderBy(x => x.Row).ThenBy(x => x.SeatNumber).GroupWhile<SeatDto>((n1, n2) => n2.SeatNumber - n1.SeatNumber == 1);
-                     
-            if(result.Count() > 1)
-            {
-                _logger.LogInformation($"Seats are not contigious!");
-                return false;
-            }
-
-            return true;
-        }
-
-        private bool AuditoriumHasSeats(AuditoriumEntity auditorium, IEnumerable<SeatDto> seats)
-        {
-            var hasSeats = seats.All(x => auditorium.Seats.Any(y => y.Row == x.Row && y.SeatNumber == x.SeatNumber));
-            _logger.LogInformation($"Auditorium has seats {hasSeats}!");
-            return hasSeats;
-        }
-
-        private bool AreAvailableSeats(ShowtimeEntity showtime, IEnumerable<SeatDto> seats)
-        {   
-            var availableSeats = showtime.Tickets.Where(x => !x.Paid && x.CreatedTime.HasExpired()).SelectMany(x => x.Seats).All(x => seats.Any(y => y.Row == x.Row && y.SeatNumber == x.SeatNumber));
-            _logger.LogInformation($"All seats available {availableSeats}!");
-            return availableSeats;
         }
     }
 
