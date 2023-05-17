@@ -6,7 +6,7 @@ using Moq;
 
 namespace ApiApplicationTests
 {
-    internal class CreateShowTimeHandlerTest
+    internal class ReserveSeatsHandlerTests
     {
         private Mock<ITicketsRepository> _ticketsRepository;
         private Mock<IAuditoriumsRepository> _auditoriumsRepository;
@@ -23,7 +23,7 @@ namespace ApiApplicationTests
         }
 
         [Test]
-        public async Task CreateShowTimeTest()
+        public async Task ReserveSeatsTest()
         {
             // Act
             var reserverSeatHandler = new ReserveSeatsHandler(_ticketsRepository.Object, _auditoriumsRepository.Object, _showtimesRepository.Object, _logger.Object);
@@ -71,14 +71,17 @@ namespace ApiApplicationTests
             
 
             // Arrange
-            var result = await reserverSeatHandler.Handle(command, CancellationToken.None);
+            var reserveSeat = await reserverSeatHandler.Handle(command, CancellationToken.None);
 
             // Assert
-            Assert.IsNotNull(result);
-            Assert.That(ticket.Id, Is.EqualTo(result.ReserveId));
-            Assert.That(ticket.Showtime.AuditoriumId, Is.EqualTo(result.AuditoriumId));
-            Assert.That(ticket.Showtime.SessionDate, Is.EqualTo(result.SessionTime));
-            Assert.That(ticket.Showtime.Movie.Title, Is.EqualTo(result.Movie));
+            Assert.IsNotNull(reserveSeat);
+            Assert.Multiple(() =>
+            {
+                Assert.That(ticket.Id, Is.EqualTo(reserveSeat.ReserveId));
+                Assert.That(ticket.Showtime.AuditoriumId, Is.EqualTo(reserveSeat.AuditoriumId));
+                Assert.That(ticket.Showtime.SessionDate, Is.EqualTo(reserveSeat.SessionTime));
+                Assert.That(ticket.Showtime.Movie.Title, Is.EqualTo(reserveSeat.Movie));
+            });
         }
     }
 }
